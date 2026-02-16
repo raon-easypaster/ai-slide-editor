@@ -6,6 +6,7 @@ interface SlideState {
     slides: Slide[];
     currentSlideId: string | null;
     addSlide: () => void;
+    addSlides: (newSlides: Slide[]) => void;
     removeSlide: (id: string) => void;
     updateSlide: (id: string, updates: Partial<Slide>) => void;
     setCurrentSlide: (id: string) => void;
@@ -31,6 +32,11 @@ export const useSlideStore = create<SlideState>((set) => ({
                 currentSlideId: newSlide.id,
             };
         }),
+    addSlides: (newSlides) =>
+        set((state) => ({
+            slides: [...state.slides, ...newSlides],
+            currentSlideId: newSlides.length > 0 ? newSlides[0].id : state.currentSlideId,
+        })),
     removeSlide: (id) =>
         set((state) => ({
             slides: state.slides.filter((s) => s.id !== id),

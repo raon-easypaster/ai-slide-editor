@@ -7,10 +7,15 @@ import { BrainCircuit } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useSlideStore } from "@/store/useSlideStore";
+// import { PDFUploader } from "@/components/upload/PDFUploader";
+import dynamic from 'next/dynamic';
+const PDFUploader = dynamic(() => import('@/components/upload/PDFUploader').then(mod => mod.PDFUploader), { ssr: false });
+import { Upload } from "lucide-react";
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const { slides } = useSlideStore();
 
   const handleAnalyze = async () => {
@@ -35,6 +40,10 @@ export default function Home() {
           <span>AI Slide Editor</span>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsUploadOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Upload PDF
+          </Button>
           <Button onClick={handleAnalyze} disabled={isAnalyzing}>
             {isAnalyzing ? "Analyzing..." : "Analyze All Slides"}
           </Button>
@@ -58,6 +67,21 @@ export default function Home() {
           </DialogHeader>
           <div className="whitespace-pre-wrap p-4 bg-muted rounded-md text-sm font-mono max-h-[60vh] overflow-auto">
             {analysisResult}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF Upload Dialog */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload PDF Slides</DialogTitle>
+            <DialogDescription>
+              Upload a PDF to parse pages into slides.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <PDFUploader />
           </div>
         </DialogContent>
       </Dialog>
