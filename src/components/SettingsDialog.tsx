@@ -102,12 +102,11 @@ export function SettingsDialog() {
                                 <SelectValue placeholder="Select a model" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                                <SelectItem value="gemini-1.5-flash-001">Gemini 1.5 Flash 001</SelectItem>
-                                <SelectItem value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</SelectItem>
+                                <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended)</SelectItem>
                                 <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                                <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</SelectItem>
-                                <SelectItem value="gemini-pro">Gemini 1.0 Pro</SelectItem>
+                                <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                                <SelectItem value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro (Exp)</SelectItem>
+                                <SelectItem value="gemini-2.0-flash-thinking-exp-01-21">Gemini 2.0 Flash Thinking</SelectItem>
                                 <SelectItem value="custom">Custom Model...</SelectItem>
                             </SelectContent>
                         </Select>

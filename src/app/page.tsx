@@ -61,9 +61,12 @@ export default function Home() {
           const response = await result.response;
           return response.text();
         } catch (error: any) {
-          // If 404 or "not found" and not already using flash, try flash
-          if ((error.message?.includes("404") || error.message?.includes("not found")) && currentModelName !== "gemini-1.5-flash" && retryCount === 0) {
-            console.warn(`Model ${currentModelName} failed. Retrying with gemini-1.5-flash...`);
+          console.warn(`Attempt with ${currentModelName} failed.`, error);
+
+          // Fallback to gemini-1.5-flash for ANY error if we haven't tried it yet
+          // This covers 404s, 400s, overloaded models, etc.
+          if (currentModelName !== "gemini-1.5-flash" && retryCount === 0) {
+            console.log(`Retrying with gemini-1.5-flash...`);
             return generateWithFallback("gemini-1.5-flash", 1);
           }
           throw error;
