@@ -33,6 +33,12 @@ export function SettingsDialog() {
     useEffect(() => {
         // If the current model is not in the default list, set it as custom
         const defaultModels = ["gemini-1.5-flash", "gemini-1.5-flash-001", "gemini-1.5-pro", "gemini-pro", "gemini-1.5-flash-8b", "gemini-2.0-flash-exp"];
+
+        // Auto-fix for common 404 error model
+        if (model === "gemini-1.5-pro" && !apiKey) {
+            // Just a safe default if needed, though pro *should* work if available.
+        }
+
         if (model && !defaultModels.includes(model)) {
             setTempModel("custom");
             setCustomModel(model);

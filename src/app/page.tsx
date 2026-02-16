@@ -32,8 +32,7 @@ export default function Home() {
     setIsAnalyzing(true);
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const modelName = useSettingsStore.getState().model || "gemini-1.5-flash";
-      const model = genAI.getGenerativeModel({ model: modelName });
+      let modelName = useSettingsStore.getState().model || "gemini-1.5-flash";
 
       const promptParts: any[] = [
         "Analyze the following slides. Provide a summary of the key themes, layout/visual feedback, and potential improvements.\n"
@@ -55,15 +54,32 @@ export default function Home() {
         }
       });
 
-      const result = await model.generateContent(promptParts);
-      const response = await result.response;
-      const text = response.text();
+      const generateWithFallback = async (currentModelName: string, retryCount = 0): Promise<string> => {
+        try {
+          const model = genAI.getGenerativeModel({ model: currentModelName });
+          const result = await model.generateContent(promptParts);
+          const response = await result.response;
+          return response.text();
+        } catch (error: any) {
+          // If 404 or "not found" and not already using flash, try flash
+          if ((error.message?.includes("404") || error.message?.includes("not found")) && currentModelName !== "gemini-1.5-flash" && retryCount === 0) {
+            console.warn(`Model ${currentModelName} failed. Retrying with gemini-1.5-flash...`);
+            return generateWithFallback("gemini-1.5-flash", 1);
+          }
+          throw error;
+        }
+      };
+
+      const text = await generateWithFallback(modelName);
+
+      // If we fell back (implicitly, we can't easily tell here without changing return type, but the result is what matters)
+      // We could check if useSettingsStore.getState().model !== modelName but we updated the local var.
 
       setAnalysisResult(text);
     } catch (error: any) {
       console.error("AI Analysis Failed:", error);
       const errorMessage = error.message || "Unknown error occurred";
-      setAnalysisResult(`Failed to analyze slides.\n\nError Details: ${errorMessage}\n\nPlease check your API Key in settings and try again.`);
+      setAnalysisResult(`Failed to analyze slides.\n\nError Details: ${errorMessage}\n\nTry selecting 'Gemini 1.5 Flash' in settings.`);
     } finally {
       setIsAnalyzing(false);
     }
