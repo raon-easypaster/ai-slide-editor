@@ -7,8 +7,12 @@ import { BrainCircuit } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useSlideStore } from "@/store/useSlideStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { SaveLoadButtons } from "@/components/SaveLoadButtons";
 // import { PDFUploader } from "@/components/upload/PDFUploader";
 import dynamic from 'next/dynamic';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 const PDFUploader = dynamic(() => import('@/components/upload/PDFUploader').then(mod => mod.PDFUploader), { ssr: false });
 import { Upload } from "lucide-react";
 
@@ -17,18 +21,37 @@ export default function Home() {
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const { slides } = useSlideStore();
+  const { apiKey } = useSettingsStore();
 
   const handleAnalyze = async () => {
+    if (!apiKey) {
+      alert("Please set your Gemini API Key in Settings first.");
+      return;
+    }
+
     setIsAnalyzing(true);
-    // Mock AI Analysis
-    setTimeout(() => {
-      setAnalysisResult(
-        `Analysis of ${slides.length} slides:\n\n` +
-        slides.map(s => `- Slide ${s.id.slice(0, 4)}: ${s.content.slice(0, 20)}...`).join('\n') +
-        "\n\nOverall Theme: Productive Thinking."
-      );
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `
+        Analyze the following slides and provide a summary of the key themes, potential improvements, and an overall structural assessment.
+        
+        Slides:
+        ${slides.map((s, i) => `Slide ${i + 1}: ${s.content} ${s.imageUrl ? '(Has Image)' : ''}`).join('\n')}
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      setAnalysisResult(text);
+    } catch (error) {
+      console.error("AI Analysis Failed:", error);
+      setAnalysisResult("Failed to analyze slides. Please check your API Key and try again.");
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -39,7 +62,7 @@ export default function Home() {
           <BrainCircuit className="h-6 w-6" />
           <span>AI Slide Editor</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Button variant="outline" onClick={() => setIsUploadOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Upload PDF
@@ -47,6 +70,8 @@ export default function Home() {
           <Button onClick={handleAnalyze} disabled={isAnalyzing}>
             {isAnalyzing ? "Analyzing..." : "Analyze All Slides"}
           </Button>
+          <SaveLoadButtons />
+          <SettingsDialog />
         </div>
       </header>
 
