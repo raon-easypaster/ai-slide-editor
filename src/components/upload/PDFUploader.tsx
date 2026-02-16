@@ -11,7 +11,7 @@ import { Upload, FileText, Loader2, Image as ImageIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export function PDFUploader() {
     const { addSlides } = useSlideStore();
@@ -59,9 +59,9 @@ export function PDFUploader() {
             }
 
             addSlides(newSlides);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error processing PDF:", error);
-            alert("Failed to process PDF.");
+            alert(`Failed to process PDF.\n\nError: ${error.message || error}`);
         } finally {
             setIsProcessing(false);
         }
