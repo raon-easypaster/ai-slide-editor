@@ -32,7 +32,8 @@ export default function Home() {
     setIsAnalyzing(true);
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const modelName = useSettingsStore.getState().model || "gemini-1.5-flash";
+      const model = genAI.getGenerativeModel({ model: modelName });
 
       const promptParts: any[] = [
         "Analyze the following slides. Provide a summary of the key themes, layout/visual feedback, and potential improvements.\n"

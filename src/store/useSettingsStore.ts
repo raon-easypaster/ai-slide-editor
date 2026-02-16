@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware';
 interface SettingsState {
     apiKey: string;
     setApiKey: (key: string) => void;
+    model: string;
+    setModel: (model: string) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -11,6 +13,8 @@ export const useSettingsStore = create<SettingsState>()(
         (set) => ({
             apiKey: '',
             setApiKey: (key) => set({ apiKey: key }),
+            model: 'gemini-1.5-flash',
+            setModel: (model) => set({ model: model }),
         }),
         {
             name: 'ai-slide-editor-settings',
