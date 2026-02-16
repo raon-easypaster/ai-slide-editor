@@ -10,14 +10,14 @@ export function SlideList() {
     const { slides, currentSlideId, addSlide, removeSlide, setCurrentSlide } = useSlideStore();
 
     return (
-        <div className="w-64 border-r bg-muted/20 flex flex-col h-full">
+        <div className="w-64 border-r bg-muted/20 flex flex-col h-full overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="font-semibold text-sm">Slides</h2>
                 <Button size="icon" variant="ghost" onClick={addSlide}>
                     <Plus className="h-4 w-4" />
                 </Button>
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
                 <div className="p-4 space-y-2">
                     {slides.map((slide, index) => (
                         <div
