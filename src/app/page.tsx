@@ -34,21 +34,35 @@ export default function Home() {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const prompt = `
-        Analyze the following slides and provide a summary of the key themes, potential improvements, and an overall structural assessment.
-        
-        Slides:
-        ${slides.map((s, i) => `Slide ${i + 1}: ${s.content} ${s.imageUrl ? '(Has Image)' : ''}`).join('\n')}
-      `;
+      const promptParts: any[] = [
+        "Analyze the following slides. Provide a summary of the key themes, layout/visual feedback, and potential improvements.\n"
+      ];
 
-      const result = await model.generateContent(prompt);
+      slides.forEach((s, i) => {
+        promptParts.push(`\n--- Slide ${i + 1} ---\n${s.content}\n`);
+        if (s.imageUrl) {
+          // Extract base64 data (remove "data:image/png;base64," prefix)
+          const base64Data = s.imageUrl.split(",")[1];
+          if (base64Data) {
+            promptParts.push({
+              inlineData: {
+                data: base64Data,
+                mimeType: "image/png",
+              },
+            });
+          }
+        }
+      });
+
+      const result = await model.generateContent(promptParts);
       const response = await result.response;
       const text = response.text();
 
       setAnalysisResult(text);
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Analysis Failed:", error);
-      setAnalysisResult("Failed to analyze slides. Please check your API Key and try again.");
+      const errorMessage = error.message || "Unknown error occurred";
+      setAnalysisResult(`Failed to analyze slides.\n\nError Details: ${errorMessage}\n\nPlease check your API Key in settings and try again.`);
     } finally {
       setIsAnalyzing(false);
     }
