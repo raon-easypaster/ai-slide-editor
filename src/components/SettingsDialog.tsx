@@ -20,17 +20,36 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Settings } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function SettingsDialog() {
     const { apiKey, setApiKey, model, setModel } = useSettingsStore();
     const [open, setOpen] = useState(false);
     const [tempKey, setTempKey] = useState(apiKey);
     const [tempModel, setTempModel] = useState(model || "gemini-1.5-flash");
+    const [customModel, setCustomModel] = useState("");
+    const [isCustom, setIsCustom] = useState(false);
+
+    useEffect(() => {
+        // If the current model is not in the default list, set it as custom
+        const defaultModels = ["gemini-1.5-flash", "gemini-1.5-flash-001", "gemini-1.5-pro", "gemini-pro", "gemini-1.5-flash-8b", "gemini-2.0-flash-exp"];
+        if (model && !defaultModels.includes(model)) {
+            setTempModel("custom");
+            setCustomModel(model);
+            setIsCustom(true);
+        } else {
+            setTempModel(model || "gemini-1.5-flash");
+            setIsCustom(false);
+        }
+    }, [model, open]);
 
     const handleSave = () => {
         setApiKey(tempKey);
-        setModel(tempModel);
+        if (tempModel === "custom") {
+            setModel(customModel);
+        } else {
+            setModel(tempModel);
+        }
         setOpen(false);
     };
 
@@ -66,18 +85,41 @@ export function SettingsDialog() {
                         <Label htmlFor="model" className="text-right">
                             AI Model
                         </Label>
-                        <Select value={tempModel} onValueChange={setTempModel}>
+                        <Select
+                            value={tempModel}
+                            onValueChange={(val) => {
+                                setTempModel(val);
+                                setIsCustom(val === "custom");
+                            }}
+                        >
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder="Select a model" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash (Default)</SelectItem>
+                                <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
                                 <SelectItem value="gemini-1.5-flash-001">Gemini 1.5 Flash 001</SelectItem>
+                                <SelectItem value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</SelectItem>
                                 <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                                <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                                <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</SelectItem>
+                                <SelectItem value="gemini-pro">Gemini 1.0 Pro</SelectItem>
+                                <SelectItem value="custom">Custom Model...</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
+                    {isCustom && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="customModel" className="text-right">
+                                Model Name
+                            </Label>
+                            <Input
+                                id="customModel"
+                                value={customModel}
+                                onChange={(e) => setCustomModel(e.target.value)}
+                                className="col-span-3"
+                                placeholder="e.g., gemini-1.5-flash-latest"
+                            />
+                        </div>
+                    )}
                 </div>
                 <div className="flex justify-end">
                     <Button onClick={handleSave}>Save changes</Button>
