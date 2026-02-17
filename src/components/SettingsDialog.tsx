@@ -50,7 +50,7 @@ export function SettingsDialog() {
     }, [model, open]);
 
     const handleSave = () => {
-        setApiKey(tempKey);
+        setApiKey(tempKey.trim());
         if (tempModel === "custom") {
             setModel(customModel);
         } else {
