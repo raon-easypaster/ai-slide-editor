@@ -11,6 +11,7 @@ interface SlideState {
     updateSlide: (id: string, updates: Partial<Slide>) => void;
     setCurrentSlide: (id: string) => void;
     reorderSlides: (startIndex: number, endIndex: number) => void;
+    setSlides: (slides: Slide[]) => void;
 }
 
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -69,11 +70,16 @@ export const useSlideStore = create<SlideState>()(
             setCurrentSlide: (id) => set({ currentSlideId: id }),
             reorderSlides: (startIndex, endIndex) =>
                 set((state) => {
-                    const newSlides = [...state.slides];
-                    const [removed] = newSlides.splice(startIndex, 1);
-                    newSlides.splice(endIndex, 0, removed);
-                    return { slides: newSlides };
+                    const result = Array.from(state.slides);
+                    const [removed] = result.splice(startIndex, 1);
+                    result.splice(endIndex, 0, removed);
+                    return { slides: result };
                 }),
+            setSlides: (newSlides) =>
+                set(() => ({
+                    slides: newSlides,
+                    currentSlideId: newSlides.length > 0 ? newSlides[0].id : null,
+                })),
         }),
         {
             name: 'ai-slide-editor-storage',

@@ -14,7 +14,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export function PDFUploader() {
-    const { addSlides } = useSlideStore();
+    const { setSlides } = useSlideStore();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -58,14 +58,14 @@ export function PDFUploader() {
                 }
             }
 
-            addSlides(newSlides);
+            setSlides(newSlides);
         } catch (error: any) {
             console.error("Error processing PDF:", error);
             alert(`Failed to process PDF.\n\nError: ${error.message || error}`);
         } finally {
             setIsProcessing(false);
         }
-    }, [addSlides]);
+    }, [setSlides]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
