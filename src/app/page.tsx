@@ -15,6 +15,7 @@ import dynamic from 'next/dynamic';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PrecisionEditor } from "@/components/editor/PrecisionEditor";
 import { SlidePreview } from "@/components/editor/SlidePreview";
+import { regenerateSlide } from "@/services/geminiService";
 const PDFUploader = dynamic(() => import('@/components/upload/PDFUploader').then(mod => mod.PDFUploader), { ssr: false });
 import { Upload } from "lucide-react";
 import { SlideAnalysis } from "@/types";
@@ -210,7 +211,37 @@ export default function Home() {
                         d[idx] = v;
                         updateSlide(currentSlideId!, { editedKeyData: d });
                       }}
-                      onApply={() => alert('Regeneration feature coming next!')}
+                      onApply={async () => {
+                        if (!apiKey) return alert("API Key required");
+                        if (!currentSlide.analysis) return alert("Analysis data missing");
+                        const trimmedKey = apiKey.trim();
+
+                        // Set status to editing/regenerating
+                        updateSlide(currentSlideId!, { status: 'editing' });
+
+                        try {
+                          const newImage = await regenerateSlide(
+                            trimmedKey,
+                            currentSlide.imageUrl,
+                            currentSlide.editedTitle || currentSlide.analysis.title,
+                            currentSlide.editedKeyData || currentSlide.analysis.key_data,
+                            currentSlide.analysis
+                          );
+
+                          // Update slide with NEW image and clear simple text to avoid overlay if desired
+                          // Or keep text for further edits?
+                          // The user said "Not overlay", so we rely on the image.
+                          updateSlide(currentSlideId!, {
+                            imageUrl: newImage,
+                            finalImage: newImage,
+                            status: 'ready'
+                          });
+                          alert("Slide Regenerated Successfully!");
+                        } catch (e: any) {
+                          alert("Regeneration Failed: " + (e.message || "Unknown error"));
+                          updateSlide(currentSlideId!, { status: 'error' });
+                        }
+                      }}
                       isEditing={currentSlide.status === 'editing'}
                     />
                   ) : (
