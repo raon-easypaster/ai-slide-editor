@@ -14,6 +14,7 @@ import { SaveLoadButtons } from "@/components/SaveLoadButtons";
 import dynamic from 'next/dynamic';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PrecisionEditor } from "@/components/editor/PrecisionEditor";
+import { SlidePreview } from "@/components/editor/SlidePreview";
 const PDFUploader = dynamic(() => import('@/components/upload/PDFUploader').then(mod => mod.PDFUploader), { ssr: false });
 import { Upload } from "lucide-react";
 import { SlideAnalysis } from "@/types";
@@ -145,7 +146,7 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="h-14 border-b flex items-center px-4 justify-between bg-card">
+      <header className="h-14 border-b flex items-center px-4 justify-between bg-card z-50 relative shadow-sm">
         <div className="flex items-center gap-2 font-bold text-xl text-primary">
           <BrainCircuit className="h-6 w-6" />
           <span>AI Slide Editor</span>
@@ -165,47 +166,65 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        <SlideList />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-64 border-r bg-muted/20 flex-shrink-0">
+          <SlideList />
+        </div>
+
+        {/* Workspace */}
+        <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950 p-6 flex gap-6">
           {(() => {
             const currentSlide = slides.find(s => s.id === currentSlideId);
-            if (currentSlide && currentSlide.analysis) {
-              return (
-                <div className="p-4 overflow-y-auto">
-                  <PrecisionEditor
-                    analysis={currentSlide.analysis}
-                    title={currentSlide.editedTitle || ''}
-                    keyData={currentSlide.editedKeyData || []}
-                    titleFontSize={currentSlide.titleFontSize || 40}
-                    keyDataFontSizes={currentSlide.keyDataFontSizes || []}
-                    titlePosition={currentSlide.titlePosition || { h: 'center', v: 'top' }}
-                    keyDataPositions={currentSlide.keyDataPositions || []}
-                    // Update handlers
-                    onTitleChange={(v) => updateSlide(currentSlideId!, { editedTitle: v })}
-                    onKeyDataChange={(idx, v) => {
-                      const d = [...(currentSlide.editedKeyData || [])];
-                      d[idx] = v;
-                      updateSlide(currentSlideId!, { editedKeyData: d });
-                    }}
-                    onTitleFontSizeChange={(v) => updateSlide(currentSlideId!, { titleFontSize: v })}
-                    onKeyDataFontSizeChange={(idx, v) => {
-                      const s = [...(currentSlide.keyDataFontSizes || [])];
-                      s[idx] = v;
-                      updateSlide(currentSlideId!, { keyDataFontSizes: s });
-                    }}
-                    onTitlePositionChange={(p) => updateSlide(currentSlideId!, { titlePosition: p })}
-                    onKeyDataPositionChange={(idx, p) => {
-                      const pos = [...(currentSlide.keyDataPositions || [])];
-                      pos[idx] = p;
-                      updateSlide(currentSlideId!, { keyDataPositions: pos });
-                    }}
-                    onApply={() => alert('Regeneration feature coming next!')}
-                    isEditing={currentSlide.status === 'editing'}
-                  />
+            if (!currentSlide) return <div className="flex-1 flex items-center justify-center text-muted-foreground">Select a slide to edit</div>;
+
+            return (
+              <>
+                {/* Left: Preview Area */}
+                <div className="flex-[2] flex flex-col justify-center max-w-5xl mx-auto w-full">
+                  <div className="aspect-video w-full">
+                    <SlidePreview
+                      imageUrl={currentSlide.imageUrl}
+                      title={currentSlide.editedTitle || (currentSlide.analysis?.title || "")}
+                      keyData={currentSlide.editedKeyData || (currentSlide.analysis?.key_data || [])}
+                      titleFontSize={currentSlide.titleFontSize || 40}
+                      keyDataFontSizes={currentSlide.keyDataFontSizes || []}
+                      // Use stored positions or defaults (which SlidePreview handles)
+                      titlePosition={currentSlide.titlePosition}
+                      keyDataPositions={currentSlide.keyDataPositions}
+                      isAnalyzing={isAnalyzing}
+                    />
+                  </div>
                 </div>
-              )
-            }
-            return <SlideEditor />;
+
+                {/* Right: Editor Panel */}
+                <div className="flex-1 min-w-[320px] max-w-sm h-full">
+                  {currentSlide.analysis ? (
+                    <PrecisionEditor
+                      analysis={currentSlide.analysis}
+                      title={currentSlide.editedTitle || ''}
+                      keyData={currentSlide.editedKeyData || []}
+                      // Pass simpler handlers
+                      onTitleChange={(v) => updateSlide(currentSlideId!, { editedTitle: v })}
+                      onKeyDataChange={(idx, v) => {
+                        const d = [...(currentSlide.editedKeyData || [])];
+                        d[idx] = v;
+                        updateSlide(currentSlideId!, { editedKeyData: d });
+                      }}
+                      onApply={() => alert('Regeneration feature coming next!')}
+                      isEditing={currentSlide.status === 'editing'}
+                    />
+                  ) : (
+                    <div className="h-full bg-card border rounded-xl p-4 shadow-sm flex flex-col">
+                      <h3 className="font-semibold mb-4 opacity-50">Standard Editor</h3>
+                      <SlideEditor />
+                      <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/10 text-xs text-primary text-center">
+                        Click "Analyze Current Slide" to unlock the Precision Editor & AI Features.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
           })()}
         </div>
       </div>
