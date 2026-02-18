@@ -12,6 +12,7 @@ interface SlidePreviewProps {
     titlePosition?: TextPosition;
     keyDataPositions?: TextPosition[];
     isAnalyzing: boolean;
+    showOverlays?: boolean;
 }
 
 export const SlidePreview: React.FC<SlidePreviewProps> = ({
@@ -22,7 +23,8 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
     keyDataFontSizes,
     titlePosition = { h: 'center', v: 'top' },
     keyDataPositions = [],
-    isAnalyzing
+    isAnalyzing,
+    showOverlays = true
 }) => {
     // Helper to map abstract positions to CSS classes or styles
     const getPositionStyle = (pos: TextPosition) => {
@@ -69,8 +71,8 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
                 </div>
             )}
 
-            {/* Overlays - Only visible if not analyzing/generating deeply */}
-            {!isAnalyzing && (
+            {/* Overlays - Only visible if requested and not analyzing */}
+            {!isAnalyzing && showOverlays && (
                 <div className="absolute inset-0 pointer-events-none p-8">
                     {/* Title */}
                     {title && (
